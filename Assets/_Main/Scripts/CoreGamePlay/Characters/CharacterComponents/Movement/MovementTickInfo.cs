@@ -2,9 +2,6 @@ using UnityEngine;
 
 namespace ZooWorld.CoreGamePlay
 {
-    /// <summary>
-    /// Snapshot of inputs and state parameters passed into <see cref="MovementLogic"/> each physics step.
-    /// </summary>
     public readonly struct MovementTickInfo
     {
         public readonly Vector3 MoveDirectionWorld;

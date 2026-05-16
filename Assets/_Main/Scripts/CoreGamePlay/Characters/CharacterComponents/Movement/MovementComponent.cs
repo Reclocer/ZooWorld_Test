@@ -8,7 +8,7 @@ namespace ZooWorld.CoreGamePlay
 {
     [Serializable]
     public class MovementComponent : CharacterComponentBase, ICharacterTraitProvider, ICharacterTickable
-    {     
+    {
         [PropertyTooltip("Current movement state id (play mode).")]
         [ShowInInspector, ReadOnly] private string _activeStateId;
         public string ActiveStateId => _activeStateId;
@@ -36,8 +36,7 @@ namespace ZooWorld.CoreGamePlay
 
         public float CurrentMaxSpeed => (_activeState?.MaxSpeed ?? 0f) * Constants.Movement.VELOCITY_SCALE;
         public float CurrentAcceleration => (_activeState?.Acceleration ?? 0f) * Constants.Movement.VELOCITY_SCALE;
-        public MovementType ActiveLocomotionType => _activeState?.MovementType ?? MovementType.Idle;
-              
+
         public override void Init(ICharacter character)
         {
             base.Init(character);
@@ -59,7 +58,7 @@ namespace ZooWorld.CoreGamePlay
 
         public void SetMoveDirection(Vector3 worldDirection)
         {
-            if (worldDirection.sqrMagnitude < 1e-6f)
+            if (worldDirection == Vector3.zero)
             {
                 _moveDirectionWorld = Vector3.zero;
                 _debugMoveDirection = Vector3.zero;
@@ -68,7 +67,7 @@ namespace ZooWorld.CoreGamePlay
 
             _moveDirectionWorld = worldDirection.normalized;
             _debugMoveDirection = _moveDirectionWorld;
-        }        
+        }
 
         public bool TrySetState(string stateId, bool force = false)
         {
@@ -143,8 +142,9 @@ namespace ZooWorld.CoreGamePlay
             if (body == null || _activeState == null)
                 return;
 
-            MovementLogic logic = _activeState.MovementLogic
-                ?? MovementLogicDefaults.Resolve(_activeState.MovementType);
+            MovementLogic logic = _activeState.MovementLogic;
+            if (logic == null)
+                return;
 
             MovementTickInfo info = MovementTickInfo.FromState(_moveDirectionWorld, _activeState);
             logic.Tick(body, deltaTime, in info);
@@ -187,7 +187,12 @@ namespace ZooWorld.CoreGamePlay
             var combined = CharacterTrait.None;
 
             foreach (MovementState state in _states)
-                combined |= MovementTraits.ToTrait(state.MovementType);
+            {
+                if (state?.MovementLogic == null)
+                    continue;
+
+                combined |= state.MovementLogic.ProvidedTraits;
+            }
 
             foreach (CharacterTrait flag in Enum.GetValues(typeof(CharacterTrait)))
             {
@@ -203,8 +208,10 @@ namespace ZooWorld.CoreGamePlay
         {
             foreach (MovementState state in _states)
             {
-                CharacterTrait stateTraits = MovementTraits.ToTrait(state.MovementType);
-                if ((stateTraits & trait) != 0)
+                if (state?.MovementLogic == null)
+                    continue;
+
+                if ((state.MovementLogic.ProvidedTraits & trait) != 0)
                     return true;
             }
 

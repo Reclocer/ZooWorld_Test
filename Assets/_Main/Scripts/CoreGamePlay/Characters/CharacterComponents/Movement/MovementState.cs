@@ -12,7 +12,7 @@ namespace ZooWorld.CoreGamePlay
         public class OutgoingTransition
         {
             [PropertyTooltip("Target state id when the condition becomes true.")]
-            [SerializeField,Required] private string _toStateId;
+            [SerializeField, Required] private string _toStateId;
 
             [PropertyTooltip("World / AI signal that triggers this transition.")]
             [SerializeField] private MovementTransitionCondition _condition = MovementTransitionCondition.ThreatDetected;
@@ -29,30 +29,24 @@ namespace ZooWorld.CoreGamePlay
         [SerializeField] private string _id = "Idle";
         public string Id => _id;
 
-        [PropertyTooltip("Locomotion kind — defines which character traits this state grants.")]
-        [SerializeField] private MovementType _movementType = MovementType.Idle;
-        public MovementType MovementType => _movementType;
-
-        [PropertyTooltip("Designer speed (× VelocityScale 1000 at runtime, e.g. 5 → 5000 u/s).")]
+        [PropertyTooltip("Designer speed (× VelocityScale at runtime).")]
         [SerializeField, Range(0f, 100f)] private float _maxSpeed = 10f;
         public float MaxSpeed => _maxSpeed;
 
-        [PropertyTooltip("Designer acceleration (× VelocityScale 1000 at runtime).")]
+        [PropertyTooltip("Designer acceleration (× VelocityScale at runtime).")]
         [SerializeField, Range(0f, 10f)] private float _acceleration = 5f;
         public float Acceleration => _acceleration * 10f;
 
         [PropertyTooltip("Used as default on play if no other state is active.")]
         [SerializeField] private bool _isDefault;
         public bool IsDefault => _isDefault;
-
-        [InfoBox("Chose move environment: GroundPlanar (walk/run) or ThreeDimensional (swim/fly).")]
+                
         [SerializeReference, Required] private MovementLogic _movementLogic;
         public MovementLogic MovementLogic => _movementLogic;
 
-        [Title("Transitions from this state")]
-        [InfoBox("Leave as Idle → Run on ThreatDetected. Transitions are evaluated only while this state is active.")]
+        [Space]
         [SerializeField, ListDrawerSettings(DefaultExpandedState = true, ShowPaging = false)]
-        private List<OutgoingTransition> _outgoingTransitions = new();           
+        private List<OutgoingTransition> _outgoingTransitions = new();
         public IReadOnlyList<OutgoingTransition> OutgoingTransitions => _outgoingTransitions;
     }
 }

@@ -9,7 +9,6 @@ namespace ZooWorld.CoreGamePlay
         None = 0,
 
         //Movement
-        CanWalk = 10,
         CanRun = 11,
         CanJump = 12,
         CanCrawl = 13,
