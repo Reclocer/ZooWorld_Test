@@ -4,5 +4,6 @@
     {
         string Id { get; }
         ICharacterView View { get; }
+        ComponentsContainer Components { get; }
     }
 }

@@ -2,6 +2,6 @@
 {
     public interface ICharacterComponent
     {
-
+        void Init(ICharacter character);
     }
 }
