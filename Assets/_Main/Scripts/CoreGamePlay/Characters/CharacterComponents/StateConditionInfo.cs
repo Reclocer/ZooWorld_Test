@@ -1,6 +1,6 @@
 namespace ZooWorld.CoreGamePlay
 {
-    public sealed class MovementRuntimeSignals
+    public sealed class StateConditionInfo
     {
         public bool ThreatDetected { get; set; }
         public bool InWater { get; set; }

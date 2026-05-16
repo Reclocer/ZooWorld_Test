@@ -2,6 +2,9 @@ namespace ZooWorld.CoreGamePlay
 {
     public static class MovementTraits
     {
+        /// <summary>
+        /// Maps movement type to required character traits
+        /// </summary>
         public static CharacterTrait ToTrait(MovementType locomotionType)
         {
             return locomotionType switch

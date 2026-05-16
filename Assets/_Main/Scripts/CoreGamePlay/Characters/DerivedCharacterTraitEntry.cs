@@ -7,11 +7,11 @@ namespace ZooWorld.CoreGamePlay
     [Serializable]
     public struct DerivedCharacterTraitEntry
     {
-        [ReadOnly, HideLabel, HorizontalGroup(0.35f)]
-        [SerializeField] private CharacterTrait _trait;
+        [HideLabel, HorizontalGroup(0.35f)]
+        [SerializeField,ReadOnly] private CharacterTrait _trait;
 
-        [ReadOnly, HideLabel, HorizontalGroup]
-        [SerializeField] private string _source;
+        [HideLabel, HorizontalGroup]
+        [SerializeField,ReadOnly] private string _source;
 
         public CharacterTrait Trait => _trait;
         public string Source => _source;

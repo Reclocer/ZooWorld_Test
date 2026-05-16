@@ -7,6 +7,6 @@ public static class Constants
 
     public static class Movement
     {
-        public const float VELOCITY_SCALE = 0.1f;
+        public const float VELOCITY_SCALE = 1f;
     }
 }

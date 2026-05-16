@@ -14,8 +14,8 @@ namespace ZooWorld.CoreGamePlay
         public string ActiveStateId => _activeStateId;
 
         [PropertyTooltip("World signals consumed by transition conditions.")]
-        [ShowInInspector, ReadOnly] private MovementRuntimeSignals _runtimeSignals = new();
-        public MovementRuntimeSignals RuntimeSignals => _runtimeSignals;
+        [ShowInInspector, ReadOnly] private StateConditionInfo _conditionInfo = new();
+        public StateConditionInfo StateConditionInfo => _conditionInfo;
 
         [PropertyTooltip("Direction passed into MovementLogic this frame (zero = no horizontal drive).")]
         [ShowInInspector, ReadOnly] private Vector3 _debugMoveDirection;
@@ -36,7 +36,7 @@ namespace ZooWorld.CoreGamePlay
 
         public float CurrentMaxSpeed => (_activeState?.MaxSpeed ?? 0f) * Constants.Movement.VELOCITY_SCALE;
         public float CurrentAcceleration => (_activeState?.Acceleration ?? 0f) * Constants.Movement.VELOCITY_SCALE;
-        public MovementType ActiveLocomotionType => _activeState?.LocomotionType ?? MovementType.Idle;
+        public MovementType ActiveLocomotionType => _activeState?.MovementType ?? MovementType.Idle;
               
         public override void Init(ICharacter character)
         {
@@ -57,9 +57,6 @@ namespace ZooWorld.CoreGamePlay
             CacheSignalEdges();
         }
 
-        /// <summary>
-        /// Desired locomotion direction in world space (normalized internally). Call from AI each FixedUpdate.
-        /// </summary>
         public void SetMoveDirection(Vector3 worldDirection)
         {
             if (worldDirection.sqrMagnitude < 1e-6f)
@@ -88,13 +85,13 @@ namespace ZooWorld.CoreGamePlay
 
         public void SetThreatDetected(bool value)
         {
-            _runtimeSignals.ThreatDetected = value;
+            _conditionInfo.ThreatDetected = value;
         }
 
         public void SetInWater(bool inWater, bool underWater)
         {
-            _runtimeSignals.InWater = inWater;
-            _runtimeSignals.UnderWater = underWater;
+            _conditionInfo.InWater = inWater;
+            _conditionInfo.UnderWater = underWater;
         }
 
         private void EvaluateTransitions()
@@ -103,6 +100,7 @@ namespace ZooWorld.CoreGamePlay
                 return;
 
             IReadOnlyList<MovementState.OutgoingTransition> outgoing = _activeState.OutgoingTransitions;
+
             if (outgoing == null || outgoing.Count == 0)
                 return;
 
@@ -126,13 +124,13 @@ namespace ZooWorld.CoreGamePlay
             return condition switch
             {
                 MovementTransitionCondition.None => false,
-                MovementTransitionCondition.ThreatDetected => _runtimeSignals.ThreatDetected,
-                MovementTransitionCondition.ThreatCleared => !_runtimeSignals.ThreatDetected,
-                MovementTransitionCondition.EnteredWater => _runtimeSignals.InWater && !_wasInWater,
-                MovementTransitionCondition.ExitedWater => !_runtimeSignals.InWater && _wasInWater,
-                MovementTransitionCondition.InWater => _runtimeSignals.InWater,
-                MovementTransitionCondition.UnderWater => _runtimeSignals.UnderWater,
-                MovementTransitionCondition.LeftUnderWater => !_runtimeSignals.UnderWater && _wasUnderWater,
+                MovementTransitionCondition.ThreatDetected => _conditionInfo.ThreatDetected,
+                MovementTransitionCondition.ThreatCleared => !_conditionInfo.ThreatDetected,
+                MovementTransitionCondition.EnteredWater => _conditionInfo.InWater && !_wasInWater,
+                MovementTransitionCondition.ExitedWater => !_conditionInfo.InWater && _wasInWater,
+                MovementTransitionCondition.InWater => _conditionInfo.InWater,
+                MovementTransitionCondition.UnderWater => _conditionInfo.UnderWater,
+                MovementTransitionCondition.LeftUnderWater => !_conditionInfo.UnderWater && _wasUnderWater,
                 MovementTransitionCondition.Manual => false,
                 _ => false,
             };
@@ -141,14 +139,15 @@ namespace ZooWorld.CoreGamePlay
         private void RunActiveMovementLogic(float deltaTime)
         {
             Rigidbody body = Character?.View?.RigidBody;
+
             if (body == null || _activeState == null)
                 return;
 
             MovementLogic logic = _activeState.MovementLogic
-                ?? MovementLogicDefaults.Resolve(_activeState.LocomotionType);
+                ?? MovementLogicDefaults.Resolve(_activeState.MovementType);
 
-            MovementTickContext context = MovementTickContext.FromState(_moveDirectionWorld, _activeState);
-            logic.Tick(body, deltaTime, in context);
+            MovementTickInfo info = MovementTickInfo.FromState(_moveDirectionWorld, _activeState);
+            logic.Tick(body, deltaTime, in info);
         }
 
         private void RebuildStateLookup()
@@ -178,8 +177,8 @@ namespace ZooWorld.CoreGamePlay
 
         private void CacheSignalEdges()
         {
-            _wasInWater = _runtimeSignals.InWater;
-            _wasUnderWater = _runtimeSignals.UnderWater;
+            _wasInWater = _conditionInfo.InWater;
+            _wasUnderWater = _conditionInfo.UnderWater;
         }
 
         #region About trait
@@ -188,7 +187,7 @@ namespace ZooWorld.CoreGamePlay
             var combined = CharacterTrait.None;
 
             foreach (MovementState state in _states)
-                combined |= MovementTraits.ToTrait(state.LocomotionType);
+                combined |= MovementTraits.ToTrait(state.MovementType);
 
             foreach (CharacterTrait flag in Enum.GetValues(typeof(CharacterTrait)))
             {
@@ -204,7 +203,7 @@ namespace ZooWorld.CoreGamePlay
         {
             foreach (MovementState state in _states)
             {
-                CharacterTrait stateTraits = MovementTraits.ToTrait(state.LocomotionType);
+                CharacterTrait stateTraits = MovementTraits.ToTrait(state.MovementType);
                 if ((stateTraits & trait) != 0)
                     return true;
             }

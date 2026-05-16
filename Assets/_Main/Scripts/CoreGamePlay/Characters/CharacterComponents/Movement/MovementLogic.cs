@@ -9,6 +9,6 @@ namespace ZooWorld.CoreGamePlay
     [Serializable]
     public abstract class MovementLogic
     {
-        public abstract void Tick(Rigidbody body, float deltaTime, in MovementTickContext context);
+        public abstract void Tick(Rigidbody body, float deltaTime, in MovementTickInfo info);
     }
 }
